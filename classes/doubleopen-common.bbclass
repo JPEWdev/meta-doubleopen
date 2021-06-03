@@ -35,7 +35,7 @@ def excluded_package(d, pn):
 
 def sha256(fname):
     """
-    Calculate SHA256 checksum for a file. 
+    Calculate SHA256 checksum for a file.
     """
 
     import hashlib
@@ -48,7 +48,7 @@ def sha256(fname):
 
 def sha1(fname):
     """
-    Calculate SHA1 checksum for a file. 
+    Calculate SHA1 checksum for a file.
     """
 
     import hashlib
@@ -86,9 +86,8 @@ def spdx_create_tarball(d, srcdir, ar_outdir):
     bb.utils.mkdirhier(ar_outdir)
     filename = '%s.tar.bz2' % d.getVar('PF')
     tarname = os.path.join(ar_outdir, filename)
-    tar = tarfile.open(tarname, 'w:bz2')
-    tar.add(srcdir, arcname=os.path.basename(srcdir), filter=exclude_useless_paths_and_strip_metadata)
-    tar.close()
+    with tarfile.open(tarname, 'w:bz2') as tar:
+        tar.add(srcdir, arcname=os.path.basename(srcdir), filter=exclude_useless_paths_and_strip_metadata)
     return tarname
 
 def exclude_useless_paths_and_strip_metadata(tarinfo):
@@ -116,7 +115,7 @@ def create_base_spdx(name):
     # Document Creation information
     spdx["spdxVersion"] = "SPDX-2.2"
     spdx["dataLicense"] = "CC0-1.0"
-    spdx["SPDXID"] = f"SPDXRef-{name}"
+    spdx["SPDXID"] = "SPDXRef-DOCUMENT"
     spdx["name"] = name
     spdx["documentNamespace"] = "http://spdx.org/spdxdocs/" + spdx["name"] + str(uuid.uuid4())
     spdx["creationInfo"] = {}
@@ -130,11 +129,15 @@ def create_base_spdx(name):
     spdx["relationships"] = []
     return spdx
 
+def get_package_spdxid(name, id_prefix):
+    return "SPDXRef-%s-%s" % (name, id_prefix)
+
+
 def create_spdx_package(name, version, id_prefix, source_location=None, homepage=None, license_declared=None, summary=None, description=None, external_refs=None, source_info=None):
     # Package Information
     package = {}
     package["name"] = name
-    package["SPDXID"] = "SPDXRef-" + id_prefix + "-" + name
+    package["SPDXID"] = get_package_spdxid(name, id_prefix)
     package["versionInfo"] = version
     if source_location:
         package["downloadLocation"] = source_location
@@ -158,3 +161,13 @@ def create_spdx_package(name, version, id_prefix, source_location=None, homepage
         package["sourceInfo"] = source_info
     package["copyrightText"] = "NOASSERTION"
     return package
+
+def add_spdx_relationship(spdx, from_id, relationship, to_id):
+    relationship = {
+        "spdxElementId": from_id,
+        "relatedSpdxElement": to_id,
+        "relationshipType": relationship,
+    }
+
+    spdx["relationships"].append(relationship)
+
