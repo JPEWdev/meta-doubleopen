@@ -1,4 +1,3 @@
-inherit doubleopen-common
 inherit cve-data
 
 
@@ -27,6 +26,12 @@ def get_doc_namespace(d, doc):
     import uuid
     namespace_uuid = uuid.uuid5(uuid.NAMESPACE_DNS, d.getVar("SPDX_UUID_NAMESPACE"))
     return "%s/%s-%s" % (d.getVar("SPDX_NAMESPACE_PREFIX"), doc.name, str(uuid.uuid5(namespace_uuid, doc.name)))
+
+
+def is_work_shared(d):
+    pn = d.getVar('PN')
+    return bb.data.inherits_class('kernel', d) or pn.startswith('gcc-source')
+
 
 def convert_license_to_spdx(lic, d):
     def convert(l):
@@ -547,7 +552,7 @@ def spdx_get_src(d):
 
             git_path = src_dir + "/.git"
             if os.path.exists(git_path):
-                remove_dir_tree(git_path)
+                shutils.rmtree(git_path)
 
         # Make sure gcc and kernel sources are patched only once
         if not (d.getVar('SRC_URI') == "" or is_work_shared(d)):
