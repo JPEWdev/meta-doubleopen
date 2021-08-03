@@ -446,7 +446,7 @@ python do_create_spdx() {
     pkgdest = Path(d.getVar("PKGDEST"))
     for package in d.getVar("PACKAGES").split():
         package_doc = spdx.SPDXDocument()
-        pkg_name = d.getVar("PKG_%s" % package) or package
+        pkg_name = d.getVar("PKG:%s" % package) or package
         package_doc.name = pkg_name
         package_doc.documentNamespace = get_doc_namespace(d, package_doc)
         package_doc.creationInfo.created = creation_time
@@ -463,7 +463,7 @@ python do_create_spdx() {
 
         package_doc.externalDocumentRefs.append(recipe_ref)
 
-        package_license = d.getVar("LICENSE_%s" % package) or d.getVar("LICENSE")
+        package_license = d.getVar("LICENSE:%s" % package) or d.getVar("LICENSE")
 
         spdx_package = spdx.SPDXPackage()
 
