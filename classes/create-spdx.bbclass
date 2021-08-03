@@ -337,13 +337,13 @@ python do_create_spdx() {
     @contextmanager
     def optional_tarfile(name, guard, mode="w"):
         import tarfile
-        import bb.zstd
+        import bb.compress.zstd
 
         num_threads= int(d.getVar("BB_NUMBER_THREADS"))
 
         if guard:
             name.parent.mkdir(parents=True, exist_ok=True)
-            with bb.zstd.open(name, mode=mode + "b", num_threads=num_threads) as f:
+            with bb.compress.zstd.open(name, mode=mode + "b", num_threads=num_threads) as f:
                 with tarfile.open(fileobj=f, mode=mode + "|") as tf:
                     yield tf
         else:
@@ -575,7 +575,7 @@ python image_combine_spdx() {
     from datetime import timezone, datetime
     from pathlib import Path
     import tarfile
-    import bb.zstd
+    import bb.compress.zstd
 
     creation_time = datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     image_name = d.getVar("IMAGE_NAME")
@@ -636,7 +636,7 @@ python image_combine_spdx() {
     visited_docs = set()
 
     spdx_tar_path = imgdeploydir / (image_name + ".spdx.tar.zst")
-    with bb.zstd.open(spdx_tar_path, "w", num_threads=num_threads) as f:
+    with bb.compress.zstd.open(spdx_tar_path, "w", num_threads=num_threads) as f:
         with tarfile.open(fileobj=f, mode="w|") as tar:
             def collect_spdx_document(path):
                 nonlocal tar
