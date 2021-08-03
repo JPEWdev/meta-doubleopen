@@ -1,6 +1,5 @@
 inherit cve-data
 
-
 DEPLOY_DIR_SPDX ??= "${DEPLOY_DIR}/spdx/${MACHINE}"
 
 SPDXDIR ??= "${WORKDIR}/spdx"
@@ -49,6 +48,7 @@ def convert_license_to_spdx(lic, d):
 
     return ' '.join(convert(l) for l in lic.split())
 
+
 def process_sources(d):
     pn = d.getVar('PN')
     assume_provided = (d.getVar("ASSUME_PROVIDED") or "").split()
@@ -75,6 +75,7 @@ def process_sources(d):
         return False
 
     return True
+
 
 def write_doc(d, spdx_doc, subdir):
     from pathlib import Path
@@ -110,6 +111,7 @@ def read_doc(filename):
         doc = spdx.SPDXDocument.from_json(f)
 
     return (doc, sha1.hexdigest())
+
 
 def add_package_files(d, doc, spdx_pkg, topdir, get_spdxid, get_types, *, archive=None, ignore_dirs=[], ignore_top_level_dirs=[]):
     from pathlib import Path
@@ -306,6 +308,7 @@ def collect_dep_recipes(d, doc, spdx_recipe):
 
 collect_dep_recipes[vardepsexclude] += "BB_TASKDEPDATA"
 
+
 def collect_dep_sources(d, dep_recipes):
     import sbom
 
@@ -339,7 +342,7 @@ python do_create_spdx() {
         import tarfile
         import bb.compress.zstd
 
-        num_threads= int(d.getVar("BB_NUMBER_THREADS"))
+        num_threads = int(d.getVar("BB_NUMBER_THREADS"))
 
         if guard:
             name.parent.mkdir(parents=True, exist_ok=True)
