@@ -448,6 +448,9 @@ python do_create_spdx() {
 
     pkgdest = Path(d.getVar("PKGDEST"))
     for package in d.getVar("PACKAGES").split():
+        if not oe.packagedata.packaged(package, d):
+            continue
+
         package_doc = spdx.SPDXDocument()
         pkg_name = d.getVar("PKG:%s" % package) or package
         package_doc.name = pkg_name
