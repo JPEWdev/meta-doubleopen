@@ -572,6 +572,8 @@ python image_combine_spdx() {
     import os
     import spdx
     import sbom
+    import io
+    import json
     from oe.rootfs import image_list_installed_packages
     from datetime import timezone, datetime
     from pathlib import Path
@@ -636,6 +638,8 @@ python image_combine_spdx() {
 
     visited_docs = set()
 
+    index = {"documents": []}
+
     spdx_tar_path = imgdeploydir / (image_name + ".spdx.tar.zst")
     with bb.compress.zstd.open(spdx_tar_path, "w", num_threads=num_threads) as f:
         with tarfile.open(fileobj=f, mode="w|") as tar:
@@ -643,6 +647,7 @@ python image_combine_spdx() {
                 nonlocal tar
                 nonlocal deploy_dir_spdx
                 nonlocal source_date_epoch
+                nonlocal index
 
                 if path in visited_docs:
                     return
@@ -671,11 +676,30 @@ python image_combine_spdx() {
 
                     tar.addfile(info, f)
 
+                    index["documents"].append({
+                        "filename": info.name,
+                        "documentNamespace": doc.documentNamespace,
+                    })
+
                 for ref in doc.externalDocumentRefs:
                     ref_path = deploy_dir_spdx / "by-namespace" / ref.spdxDocument.replace("/", "_")
                     collect_spdx_document(ref_path)
 
             collect_spdx_document(image_spdx_path)
+
+            index["documents"].sort(key=lambda x: x["filename"])
+
+            index_str = io.BytesIO(json.dumps(index, sort_keys=True).encode("utf-8"))
+
+            info = tarfile.TarInfo()
+            info.name = "index.json"
+            info.size = len(index_str.getvalue())
+            info.uid = 0
+            info.gid = 0
+            info.uname = "root"
+            info.gname = "root"
+
+            tar.addfile(info, fileobj=index_str)
 
     spdx_tar_link = imgdeploydir / (image_link_name + ".spdx.tar.zst")
     spdx_tar_link.symlink_to(os.path.relpath(spdx_tar_path, spdx_tar_link.parent))
