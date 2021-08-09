@@ -644,6 +644,11 @@ python image_combine_spdx() {
                 nonlocal deploy_dir_spdx
                 nonlocal source_date_epoch
 
+                if path in visited_docs:
+                    return
+
+                visited_docs.add(path)
+
                 with path.open("rb") as f:
                     doc = spdx.SPDXDocument.from_json(f)
                     f.seek(0)
@@ -651,6 +656,7 @@ python image_combine_spdx() {
                     if doc.documentNamespace in visited_docs:
                         return
 
+                    bb.note("Adding SPDX document %s" % path)
                     visited_docs.add(doc.documentNamespace)
                     info = tar.gettarinfo(fileobj=f)
 
