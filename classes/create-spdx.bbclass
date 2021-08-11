@@ -1,6 +1,9 @@
-inherit cve-data
-
 DEPLOY_DIR_SPDX ??= "${DEPLOY_DIR}/spdx/${MACHINE}"
+
+# The product name that the CVE database uses.  Defaults to BPN, but may need to
+# be overriden per recipe (for example tiff.bb sets CVE_PRODUCT=libtiff).
+CVE_PRODUCT ??= "${BPN}"
+CVE_VERSION ??= "${PV}"
 
 SPDXDIR ??= "${WORKDIR}/spdx"
 SPDXDEPLOY = "${SPDXDIR}/deploy"
@@ -331,6 +334,7 @@ python do_create_spdx() {
     import uuid
     from pathlib import Path
     from contextlib import contextmanager
+    import oe.cve_check
 
     @contextmanager
     def optional_tarfile(name, guard, mode="w"):
@@ -396,13 +400,13 @@ python do_create_spdx() {
     # Some CVEs may be patched during the build process without incrementing the version number,
     # so querying for CVEs based on the CPE id can lead to false positives. To account for this,
     # save the CVEs fixed by patches to source information field in the SPDX.
-    patched_cves = get_patched_cves(d)
+    patched_cves = oe.cve_check.get_patched_cves(d)
     patched_cves = list(patched_cves)
     patched_cves = ' '.join(patched_cves)
     if patched_cves:
         recipe.sourceInfo = "CVEs fixed: " + patched_cves
 
-    cpe_ids = get_cpe_ids(d)
+    cpe_ids = oe.cve_check.get_cpe_ids(d.getVar("CVE_PRODUCT"), d.getVar("CVE_VERSION"))
     if cpe_ids:
         for cpe_id in cpe_ids:
             cpe = spdx.SPDXExternalReference()
